@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Dashboard | MF937</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --accent: #38bdf8;
+            --accent-hover: #0284c7;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: radial-gradient(circle at top left, #1e293b, var(--bg));
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        header { text-align: center; margin-bottom: 25px; }
+
+        h1 { margin: 10px 0 5px; font-size: 1.8rem; }
+        .subtitle { color: var(--text-dim); font-size: 0.9rem; }
+
+        /* Owner Section (Public) */
+        .owner-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px dashed rgba(56, 189, 248, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .owner-name { font-weight: 600; font-size: 1.1rem; color: var(--accent); margin-bottom: 8px;}
+        .owner-details { font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;}
+        .owner-details a { color: var(--text-main); text-decoration: none; }
+
+        /* Vault Section */
+        .vault {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 24px;
+        }
+
+        /* Lock Screen UI */
+        #lock-screen { text-align: center; }
+        .lock-icon { font-size: 2rem; margin-bottom: 10px; }
+        .pwd-input {
+            width: 80%;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(15,23,42,0.8);
+            color: white;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .pwd-input:focus { outline: 2px solid var(--accent); }
+        .unlock-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .unlock-btn:hover { background: var(--accent-hover); color: white; }
+        #error-msg { color: var(--danger); font-size: 0.85rem; margin-top: 10px; display: none; }
+
+        /* Protected Content UI */
+        #protected-content { display: none; }
+        .section-title {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 20px 0 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .info-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
+        .label { color: var(--text-dim); font-size: 0.85rem; }
+        .value { font-family: 'Monaco', 'Consolas', monospace; font-weight: 500; color: var(--text-main); }
+        
+        /* Barcode & QR Styling */
+        .barcode-container {
+            background: #fff;
+            padding: 5px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        .barcode-container svg { max-height: 50px; width: 100%; }
+        
+        .qr-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            margin-top: 15px;
+        }
+        .qr-text { flex: 1; }
+        .qr-image {
+            background: #fff;
+            padding: 8px;
+            border-radius: 8px;
+            margin-left: 15px;
+        }
+        .qr-image img { width: 90px; height: 90px; display: block; }
+
+        .gateway-link {
+            display: block; text-align: center; background: rgba(255,255,255,0.1);
+            color: var(--text-main); text-decoration: none; padding: 12px;
+            border-radius: 8px; font-weight: 500; margin-top: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .gateway-link:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>ZTE MF937 Dashboard</h1>
+        <p class="subtitle">Personal Hotspot Interface</p>
+    </header>
+
+    <div class="owner-card">
+        <div class="owner-name">Owned by: Mohamed Rabie Shehata</div>
+        <div class="owner-details">
+            📞 01554574350 <br>
+            ✉️ <a href="mailto:Mohamed.rabie@mrby-tech.com">Mohamed.rabie@mrby-tech.com</a> | 
+            <a href="mailto:mrby20647@gmail.com">mrby20647@gmail.com</a><br>
+            🌐 <a href="http://mrby-tech.com" target="_blank">mrby-tech.com</a>
+        </div>
+    </div>
+
+    <div class="vault">
+        
+        <div id="lock-screen">
+            <div class="lock-icon">🔒</div>
+            <p class="subtitle">Enter password to view Device Specs & WiFi</p>
+            <input type="password" id="vault-password" class="pwd-input" placeholder="Enter Secure Password">
+            <br>
+            <button class="unlock-btn" onclick="unlockVault()">Unlock Vault</button>
+            <div id="error-msg">Incorrect Password. Access Denied.</div>
+        </div>
+
+        <div id="protected-content">
+            <div style="text-align: center; color: var(--success); margin-bottom: 15px; font-size: 0.9rem;">
+                🔓 Vault Unlocked Successfully
+            </div>
+
+            <div class="section-title">Technical Specifications</div>
+            
+            <div class="info-item">
+                <div class="info-row">
+                    <span class="label">IMEI</span>
+                    <span class="value">863881053325527</span>
+                </div>
+                <div class="barcode-container">
+                    <svg id="barcode-imei"></svg>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-row">
+                    <span class="label">Serial Number</span>
+                    <span class="value">320243752562</span>
+                </div>
+                <div class="barcode-container">
+                    <svg id="barcode-sn"></svg>
+                </div>
+            </div>
+
+            <div class="section-title">Rapid Connectivity (WiFi)</div>
+            
+            <div class="qr-section">
+                <div class="qr-text">
+                    <div class="label" style="margin-bottom: 8px;">SSID: <span class="value" style="color: white;">ZTE_6D90DC</span></div>
+                    <div class="label">KEY: <span class="value" style="color: white;">8DTQ7NX2</span></div>
+                    <div style="font-size: 0.75rem; color: var(--accent); margin-top: 10px;">Scan QR to auto-connect</div>
+                </div>
+                <div class="qr-image">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=WIFI:T:WPA;S:ZTE_6D90DC;P:8DTQ7NX2;;" alt="WiFi QR Code" />
+                </div>
+            </div>
+
+            <div class="section-title">Administrator Gateway</div>
+            <div class="info-item" style="flex-direction: row; justify-content: space-between;">
+                <span class="label">Admin Password</span>
+                <span class="value" style="color: #fbbf24;">n34EXPeK</span>
+            </div>
+            <a href="http://192.168.0.1" target="_blank" class="gateway-link">Go to 192.168.0.1</a>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function unlockVault() {
+        const pwdInput = document.getElementById('vault-password').value;
+        const errorMsg = document.getElementById('error-msg');
+        
+        if (pwdInput === 'Mr@secure!29809292201632') {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('protected-content').style.display = 'block';
+            
+            // Generate barcodes only after vault is visible so they size correctly
+            JsBarcode("#barcode-imei", "863881053325527", {
+                format: "CODE128",
+                width: 1.5,
+                height: 40,
+                displayValue: false,
+                margin: 0
+            });
+            JsBarcode("#barcode-sn", "320243752562", {
+                format: "CODE128",
+                width: 1.5,
+                height: 40,
+                displayValue: false,
+                margin: 0
+            });
+        } else {
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    // Allow pressing "Enter" in the password field
+    document.getElementById('vault-password').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') unlockVault();
+    });
+</script>
+
+</body>
+</html>
